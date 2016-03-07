@@ -45,10 +45,36 @@ int main( int argc, char **argv )
 
 
 
-	/*
-		Serial quicksort. This is the line that needs to be replaced with your parallel bucketsort algorithm.
-	*/
-	if( rank==0 ) serialQuicksort(globalArray,0,n);			/* serialQuicksort() is in routines.c */
+
+	  /*
+	            Task 1:   Scatter big buckets two processes
+		*/
+		int dataPerProc = n/numprocs;
+		float *bigBucket  = (float*) malloc( 2*dataPerProc*sizeof(float) );
+		MPI_Scatter( globalArray, dataPerProc, MPI_FLOAT, bigBucket, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD );
+		displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, 12);
+
+		/*
+		        Task 2: allocate memory for small buckets
+		*/
+		//float **smallBucket;
+
+		int *size = (int*) malloc(sizeof(dataPerProc));
+		float **smallBucket = (float**) malloc( sizeof(float*)*n );		/* n rows in total */
+
+
+		for( i=0; i<n; i++ )
+			smallBucket[i] = (float*) malloc( sizeof(float)*n );	/* Allocate memory for each row */
+
+		/* Put some initial values in the array */
+		int j;
+		for( i=0; i<n; i++ )
+			for( j=0; j<n; j++ )
+				smallBucket[i][j] = (int) (bigBucket[i] * numprocs);
+
+
+		displaySmallBuckets( smallBucket, size, rank, numprocs, n );
+
 
 
 
@@ -68,37 +94,6 @@ int main( int argc, char **argv )
 	}
 
 
-
-
-        /*
-            Task 1:   Scatter big buckets two processes
-	*/
-	int dataPerProc = n/numprocs;
-	float *bigBucket  = (float*) malloc( 2*dataPerProc*sizeof(float) );
-	MPI_Scatter( globalArray, dataPerProc, MPI_FLOAT, bigBucket, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD );
-	displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, 12);
-
-	/*
-	        Task 2: allocate memory for small buckets
-	*/
-	//float **smallBucket;
-	int j;
-	int *size = (int*) malloc(sizeof(dataPerProc));
-  float **smallBucket; // = (float**) malloc( sizeof(float*)*n );
-	for ( i = 0; i < rank; i++)
-	{
-		for ( j = 0; j < rank; j++)
-		{
-			if (bigBucket[i]< 1/numprocs)
-			{
-				smallBucket[j][i] = bigBucket[i];
-			}
-		}
-
-	}
-
-
-	displaySmallBuckets( smallBucket, size, rank, numprocs, n );
 
 
 
