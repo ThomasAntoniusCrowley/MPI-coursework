@@ -71,9 +71,6 @@ int main( int argc, char **argv )
 			smallSizes[i]=0;
 		}
 
-		/* Allocate memory for each row */
-
-
 
 		/*populate the array */
 		int j;
@@ -126,14 +123,21 @@ int main( int argc, char **argv )
 		/* Task 4
 		sort each big bucket using serial sort */
 
-	 	for (rank = 0; rank < (n/numprocs); rank ++)
+		for (i=0; i<=numprocs; i++)
 		{
-			serialQuicksort(bigBucket,0,n);
+			if ( i == rank)
+			{
+				serialQuicksort(bigBucket,0,(n/numprocs));
+			}
 		}
+
+		displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, n);
 
 		/*Task 5
 		concatenate each rank's big bucket into a single sorter list with rank 0 */
 
+
+			MPI_Gather(bigBucket, dataPerProc, MPI_FLOAT, globalArray, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
 
 
