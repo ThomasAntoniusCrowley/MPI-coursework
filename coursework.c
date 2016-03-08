@@ -50,30 +50,43 @@ int main( int argc, char **argv )
 	            Task 1:   Scatter big buckets two processes
 		*/
 		int dataPerProc = n/numprocs;
-		float *bigBucket  = (float*) malloc( 2*dataPerProc*sizeof(float) );
+		float *bigBucket  = (float*) malloc( n*sizeof(float) );
 		MPI_Scatter( globalArray, dataPerProc, MPI_FLOAT, bigBucket, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD );
-		displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, 12);
+		displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, n);
 
 		/*
 		        Task 2: allocate memory for small buckets
 		*/
-		//float **smallBucket;
 
-		int *size = (int*) malloc(sizeof(dataPerProc));
-		float **smallBucket = (float**) malloc( sizeof(float*)*n );		/* n rows in total */
+		float **smallBucket = (float**) malloc( sizeof(float)*dataPerProc );		/* n rows in total */
+		for( i=0; i<numprocs; i++ )
+		{
+			smallBucket[i] = (float*) malloc( sizeof(float)*numprocs );
+		}
+		/* create array of containing the size of the small buckets */
+
+		int smallSizes[n];
+		for (i=0; i<n; i++ )
+		{
+			smallSizes[i]=0;
+		}
+
+		/* Allocate memory for each row */
 
 
-		for( i=0; i<n; i++ )
-			smallBucket[i] = (float*) malloc( sizeof(float)*n );	/* Allocate memory for each row */
 
-		/* Put some initial values in the array */
+		/*populate the array */
 		int j;
-		for( i=0; i<n; i++ )
-			for( j=0; j<n; j++ )
-				smallBucket[i][j] = (int) (bigBucket[i] * numprocs);
+		for( i=0; i<n/numprocs; i++ )
+		{
+			int smallBucketIndex = (int) (bigBucket[i] * numprocs);
+			printf("%i ", smallBucketIndex);
+			smallBucket[smallBucketIndex][smallSizes[smallBucketIndex]]=bigBucket[i];
+			smallSizes[smallBucketIndex] += 1;
+		}
+		printf("hi");
 
-
-		displaySmallBuckets( smallBucket, size, rank, numprocs, n );
+		displaySmallBuckets( smallBucket, smallSizes, rank, numprocs, n );
 
 
 
