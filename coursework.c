@@ -97,29 +97,26 @@ int main( int argc, char **argv )
 				for (j=0; j<smallSizes[i]; j++ )
 				{
 					bigBucket[i] = smallBucket[i][j];
-					printf(" send loop " );
 				}
 			}
 			else
 			{
-				printf(" else loop ");
-			//	MPI_Send(smallBucket, smallSizes[i], MPI_FLOAT, rank, 0, MPI_COMM_WORLD);
+				MPI_Send(smallBucket[i], smallSizes[i], MPI_FLOAT, i, 0, MPI_COMM_WORLD);
 			}
 		}
 
-		printf(" loop end ");
-
-		/* receives the files */
-		for (j=0; j<numprocs; j++)
+		/* receives the array */
+		for (i=0; i<numprocs; i++)
 		{
-			if (!(rank == j))
+			int currentSize = smallSizes[rank];
+			MPI_Status status;
+			int count;
+			if (!(rank == i))
 			{
-			// 	MPI_Status status;
-			// 	int count;
-			// 	MPI_Probe(0, 0, MPI_COMM_WORLD, &status);
-			// 	MPI_Get_count(&status, MPI_FLOAT, &count);
-			// //	MPI_Recv(bigBucket, smallSizes[i], MPI_FLOAT, rank, 0, MPI_COMM_WORLD, &status);
-				printf("recv loop");
+				MPI_Probe(i, 0, MPI_COMM_WORLD, &status);
+				MPI_Get_count(&status, MPI_FLOAT, &count);
+				MPI_Recv(&bigBucket[currentSize], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
+				currentSize += 1;
 			}
 		}
 
@@ -129,10 +126,10 @@ int main( int argc, char **argv )
 		/* Task 4
 		sort each big bucket using serial sort */
 
-		// for (rank=0; rank<2; rank++)
-		// {
-		// 		serialQuickSort( bigBucket, 0, numprocs );
-		// }
+	 	for (rank = 0; rank < (n/numprocs); rank ++)
+		{
+			serialQuicksort(bigBucket,0,n);
+		}
 
 		/*Task 5
 		concatenate each rank's big bucket into a single sorter list with rank 0 */
