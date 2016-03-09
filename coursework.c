@@ -113,7 +113,8 @@ int main( int argc, char **argv )
 				MPI_Probe(i, 0, MPI_COMM_WORLD, &status);
 				MPI_Get_count(&status, MPI_FLOAT, &count);
 				MPI_Recv(&bigBucket[currentSize], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
-				currentSize += 1;
+				currentSize += count;
+			
 			}
 		}
 
