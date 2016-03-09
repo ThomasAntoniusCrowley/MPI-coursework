@@ -130,7 +130,7 @@ int main( int argc, char **argv )
 		/* Task 4
 		sort each big bucket using serial sort */
 		serialQuicksort(bigBucket,0,(currentSize));
-  
+
 		displayBigBuckets( bigBucket, currentSize,rank, numprocs, n);
 
 		/*Task 5
@@ -140,7 +140,7 @@ int main( int argc, char **argv )
 
 			if (rank == 0)
 			{
-				for (j=0; j<currentBigSize; j++ )
+				for (j=0; j<currentSize; j++ )
 				{
 					globalArray[j] = bigBucket[j];
 					currentBigSize += 1;
@@ -158,7 +158,7 @@ int main( int argc, char **argv )
 			{
 				for (i=0; i<numprocs; i++)
 				{
-					//MPI_Status status;
+					MPI_Status status;
 					MPI_Probe(i, 0, MPI_COMM_WORLD, &status);
 					MPI_Get_count(&status, MPI_FLOAT, &count);
 					MPI_Recv(&globalArray[currentBigSize], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
