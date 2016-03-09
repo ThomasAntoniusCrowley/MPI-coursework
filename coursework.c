@@ -45,6 +45,8 @@ int main( int argc, char **argv )
 
 
 
+		double startTime = MPI_Wtime(); //start timer
+
 
 	  /*
 	            Task 1:   Scatter big buckets two processes
@@ -93,7 +95,7 @@ int main( int argc, char **argv )
 			{
 				for (j=0; j<smallSizes[i]; j++ )
 				{
-					bigBucket[i] = smallBucket[i][j];
+					bigBucket[j] = smallBucket[i][j];
 				}
 			}
 			else
@@ -102,24 +104,28 @@ int main( int argc, char **argv )
 			}
 		}
 
+		int currentSize = smallSizes[rank];
+		int count;
+		MPI_Status status;
 		/* receives the array */
 		for (i=0; i<numprocs; i++)
 		{
-			int currentSize = smallSizes[rank];
-			MPI_Status status;
-			int count;
+
+			//MPI_Status status;
+
 			if (!(rank == i))
 			{
 				MPI_Probe(i, 0, MPI_COMM_WORLD, &status);
 				MPI_Get_count(&status, MPI_FLOAT, &count);
 				MPI_Recv(&bigBucket[currentSize], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
 				currentSize += count;
-			
+
 			}
 		}
 
+
 		/*check it works*/
-		displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, n);
+		displayBigBuckets( bigBucket, currentSize,rank, numprocs, n);
 
 		/* Task 4
 		sort each big bucket using serial sort */
@@ -132,14 +138,48 @@ int main( int argc, char **argv )
 			}
 		}
 
-		displayBigBuckets( bigBucket, dataPerProc,rank, numprocs, n);
+		displayBigBuckets( bigBucket, currentSize,rank, numprocs, n);
 
 		/*Task 5
 		concatenate each rank's big bucket into a single sorter list with rank 0 */
+			int bigSizes[n];
+			for (i=0; i<n; i++ )
+			{
+				bigSizes[i]=0;
+			}
+			int currentBigSize = bigSizes[rank];
+		//	MPI_Gather(bigBucket, dataPerProc, MPI_FLOAT, globalArray, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
+			for (i=0; i<numprocs; i++)
+			{
+				if (rank == i)
+				{
+					for (j=0; j<bigSizes[i]; j++ )
+					{
+						globalArray[j] = bigBucket[i];
+					}
+				}
+				else
+				{
+					MPI_Send(&bigBucket[i], bigSizes[i], MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+				}
+			}
 
-			MPI_Gather(bigBucket, dataPerProc, MPI_FLOAT, globalArray, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD);
+			/* receives the array */
+			for (i=0; i<numprocs; i++)
+			{
 
+				//MPI_Status status;
+
+				if (!(rank == i))
+				{
+					MPI_Probe(i, 0, MPI_COMM_WORLD, &status);
+					MPI_Get_count(&status, MPI_FLOAT, &count);
+					MPI_Recv(&globalArray[i], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
+					currentBigSize += count;
+
+				}
+			}
 
 
 	/*
@@ -158,7 +198,9 @@ int main( int argc, char **argv )
 	}
 
 
-
+	double timeTaken = MPI_Wtime() - startTime;
+	if( rank==0 )
+	  printf( "Finished. Time taken: %g seconds\n", timeTaken );
 
 
 	/*
@@ -167,7 +209,4 @@ int main( int argc, char **argv )
 	if( rank==0 ) free( globalArray );
 	MPI_Finalize();
 	return EXIT_SUCCESS;
-
-
-
 }
