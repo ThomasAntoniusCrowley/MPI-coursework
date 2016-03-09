@@ -129,55 +129,40 @@ int main( int argc, char **argv )
 
 		/* Task 4
 		sort each big bucket using serial sort */
-
-		for (i=0; i<=numprocs; i++)
-		{
-			if ( i == rank)
-			{
-				serialQuicksort(bigBucket,0,(n/numprocs));
-			}
-		}
-
+		serialQuicksort(bigBucket,0,(currentSize));
+  
 		displayBigBuckets( bigBucket, currentSize,rank, numprocs, n);
 
 		/*Task 5
 		concatenate each rank's big bucket into a single sorter list with rank 0 */
-			int bigSizes[n];
-			for (i=0; i<n; i++ )
-			{
-				bigSizes[i]=0;
-			}
-			int currentBigSize = bigSizes[rank];
-		//	MPI_Gather(bigBucket, dataPerProc, MPI_FLOAT, globalArray, dataPerProc, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
-			for (i=0; i<numprocs; i++)
+			int currentBigSize = 0;
+
+			if (rank == 0)
 			{
-				if (rank == i)
+				for (j=0; j<currentBigSize; j++ )
 				{
-					for (j=0; j<bigSizes[i]; j++ )
-					{
-						globalArray[j] = bigBucket[i];
-					}
-				}
-				else
-				{
-					MPI_Send(&bigBucket[i], bigSizes[i], MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+					globalArray[j] = bigBucket[j];
+					currentBigSize += 1;
 				}
 			}
+			else
+			{
+				MPI_Send(bigBucket, currentSize, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+			}
+
 
 			/* receives the array */
-			for (i=0; i<numprocs; i++)
+			count = 0;
+			if (rank == 0)
 			{
-
-				//MPI_Status status;
-
-				if (!(rank == i))
+				for (i=0; i<numprocs; i++)
 				{
+					//MPI_Status status;
 					MPI_Probe(i, 0, MPI_COMM_WORLD, &status);
 					MPI_Get_count(&status, MPI_FLOAT, &count);
-					MPI_Recv(&globalArray[i], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
+					MPI_Recv(&globalArray[currentBigSize], count, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
 					currentBigSize += count;
-
 				}
 			}
 
