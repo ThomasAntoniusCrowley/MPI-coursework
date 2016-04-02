@@ -1,4 +1,6 @@
 /*
+created by Dr David Head
+
 	This file contains a serial quicksort routine, and a number of debugging routines
 	that display the current state of the algorithm. These are intended to help you
 	develop and debug your solution, and it is highly recommended (although not
